@@ -20,30 +20,28 @@ public class ProducerDemoWithCallback {
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
         // Create the Producer
-        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
+        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
         for (int i=0; i<10; i++) {
             // Create the Record
             ProducerRecord<String, String> record =
-                    new ProducerRecord<String, String>("first_topic", "Hello World! " + i);
+                    new ProducerRecord<>("first_topic", "Hello World! " + i);
 
             // Send data - asynchronous
-            producer.send(record, new Callback() {
-                public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-                    // executes every time record is successfully or exception is true
-                    if (e == null) {
-                        // the record was successfully sent
-                        logger.info(
-                                "Receive new metadata.\n" +
-                                        "Topic: " + recordMetadata.topic() + "\n" +
-                                        "Partition: " + recordMetadata.partition() + "\n" +
-                                        "Offset:" + recordMetadata.offset() + "\n" +
-                                        "Timestamp: " + recordMetadata.timestamp()
-                        );
-                    }
-                    else {
-                        logger.error("Error while producing", e);
-                    }
+            producer.send(record, (recordMetadata, e) -> {
+                // executes every time record is successfully or exception is true
+                if (e == null) {
+                    // the record was successfully sent
+                    logger.info(
+                            "Receive new metadata.\n" +
+                                    "Topic: " + recordMetadata.topic() + "\n" +
+                                    "Partition: " + recordMetadata.partition() + "\n" +
+                                    "Offset:" + recordMetadata.offset() + "\n" +
+                                    "Timestamp: " + recordMetadata.timestamp()
+                    );
+                }
+                else {
+                    logger.error("Error while producing", e);
                 }
             });
         }

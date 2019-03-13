@@ -21,7 +21,7 @@ public class ProducerDemoKeys {
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
         // Create the Producer
-        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
+        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
         for (int i=0; i<10; i++) {
 
@@ -32,25 +32,23 @@ public class ProducerDemoKeys {
             logger.info("Key: " + key);
 
             // Create the Record
-            ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
 
             // Send data - synchronous
-            producer.send(record, new Callback() {
-                public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-                    // executes every time record is successfully or exception is true
-                    if (e == null) {
-                        // the record was successfully sent
-                        logger.info(
-                                "Receive new metadata.\n" +
-                                        "Topic: " + recordMetadata.topic() + "\n" +
-                                        "Partition: " + recordMetadata.partition() + "\n" +
-                                        "Offset:" + recordMetadata.offset() + "\n" +
-                                        "Timestamp: " + recordMetadata.timestamp()
-                        );
-                    }
-                    else {
-                        logger.error("Error while producing", e);
-                    }
+            producer.send(record, (recordMetadata, e) -> {
+                // executes every time record is successfully or exception is true
+                if (e == null) {
+                    // the record was successfully sent
+                    logger.info(
+                            "Receive new metadata.\n" +
+                                    "Topic: " + recordMetadata.topic() + "\n" +
+                                    "Partition: " + recordMetadata.partition() + "\n" +
+                                    "Offset:" + recordMetadata.offset() + "\n" +
+                                    "Timestamp: " + recordMetadata.timestamp()
+                    );
+                }
+                else {
+                    logger.error("Error while producing", e);
                 }
             }).get(); // block the .send() to make it synchronous - don't do this in production!
         }
